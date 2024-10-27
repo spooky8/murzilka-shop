@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model items {
+  id          Int           @id @default(autoincrement())
+  name        String        @db.VarChar(100)
+  description String?
+  price       Decimal       @db.Decimal(10, 2)
+  category    String        @db.VarChar(50)
+  order_items order_items[]
+}
+
+model order_items {
+  id       Int     @id @default(autoincrement())
+  order_id Int?
+  item_id  Int?
+  quantity Int
+  items    items?  @relation(fields: [item_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  orders   orders? @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model orders {
+  id               Int                @id @default(autoincrement())
+  customer_name    String             @db.VarChar(100)
+  customer_email   String?            @db.VarChar(100)
+  order_date       DateTime?          @default(now()) @db.Timestamp(6)
+  order_items      order_items[]
+  preparing_orders preparing_orders[]
+}
+
+model preparing_orders {
+  id           Int            @id @default(autoincrement())
+  order_id     Int?
+  start_time   DateTime?      @default(now()) @db.Timestamp(6)
+  orders       orders?        @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  ready_orders ready_orders[]
+}
+
+model ready_orders {
+  id                 Int               @id @default(autoincrement())
+  preparing_order_id Int?
+  ready_time         DateTime?         @default(now()) @db.Timestamp(6)
+  preparing_orders   preparing_orders? @relation(fields: [preparing_order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
